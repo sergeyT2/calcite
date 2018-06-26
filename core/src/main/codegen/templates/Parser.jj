@@ -5166,6 +5166,7 @@ SqlIdentifier ReservedFunctionName() :
     |   <MONTH>
     |   <NTH_VALUE>
     |   <NTILE>
+    |   <NTH_VALUE>
     |   <NULLIF>
     |   <OCTET_LENGTH>
     |   <PERCENT_RANK>
