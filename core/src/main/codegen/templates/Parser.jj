@@ -5158,7 +5158,6 @@ SqlIdentifier ReservedFunctionName() :
     |   <MOD>
     |   <MONTH>
     |   <NTILE>
-    |   <NTH_VALUE>
     |   <NULLIF>
     |   <OCTET_LENGTH>
     |   <PERCENT_RANK>
@@ -5173,6 +5172,7 @@ SqlIdentifier ReservedFunctionName() :
     |   <STDDEV_SAMP>
     |   <SUM>
     |   <UPPER>
+    |   <TO_CHAR>
     |   <TRUNCATE>
     |   <USER>
     |   <VAR_POP>
@@ -6025,6 +6025,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < TIMEZONE_MINUTE: "TIMEZONE_MINUTE" >
 |   < TINYINT: "TINYINT" >
 |   < TO: "TO" >
+|   < TO_CHAR: "TO_CHAR" >
 |   < TOP_LEVEL_COUNT: "TOP_LEVEL_COUNT" >
 |   < TRAILING: "TRAILING" >
 |   < TRANSACTION: "TRANSACTION" >

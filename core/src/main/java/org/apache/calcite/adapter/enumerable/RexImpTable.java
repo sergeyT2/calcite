@@ -179,7 +179,6 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NOT_EQUALS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NOT_LIKE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NOT_SIMILAR_TO;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NOT_SUBMULTISET_OF;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NTH_VALUE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.NTILE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.OR;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.OVERLAY;
@@ -208,6 +207,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM0;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SYSTEM_USER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TAN;
+//import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TO_CHAR;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRIM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRUNCATE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_MINUS;
@@ -255,6 +255,9 @@ public class RexImpTable {
 
     final TrimImplementor trimImplementor = new TrimImplementor();
     defineImplementor(TRIM, NullPolicy.STRICT, trimImplementor, false);
+
+  //  final ToCharImplementor toCharImplementor = new ToCharImplementor();
+   // defineImplementor(TO_CHAR, NullPolicy.STRICT, toCharImplementor, false);
 
     // logical
     defineBinary(AND, AndAlso, NullPolicy.AND, null);
@@ -468,7 +471,6 @@ public class RexImpTable {
     winAggMap.put(ROW_NUMBER, constructorSupplier(RowNumberImplementor.class));
     winAggMap.put(FIRST_VALUE,
         constructorSupplier(FirstValueImplementor.class));
-    winAggMap.put(NTH_VALUE, constructorSupplier(NthValueImplementor.class));
     winAggMap.put(LAST_VALUE, constructorSupplier(LastValueImplementor.class));
     winAggMap.put(LEAD, constructorSupplier(LeadImplementor.class));
     winAggMap.put(LAG, constructorSupplier(LagImplementor.class));
@@ -1547,64 +1549,6 @@ public class RexImpTable {
     }
   }
 
-  /** Implementor for the {@code NTH_VALUE}
-   * windowed aggregate function. */
-  static class NthValueImplementor implements WinAggImplementor {
-
-    public List<Type> getStateType(AggContext info) {
-      return Collections.emptyList();
-    }
-
-    public void implementReset(AggContext info, AggResetContext reset) {
-      // no op
-    }
-
-    public void implementAdd(AggContext info, AggAddContext add) {
-      // no op
-    }
-
-    public boolean needCacheWhenFrameIntact() {
-      return true;
-    }
-
-    public Expression implementResult(AggContext info,
-                                      AggResultContext result) {
-      WinAggResultContext winResult = (WinAggResultContext) result;
-
-      List<RexNode> rexArgs = winResult.rexArguments();
-
-      ParameterExpression res = Expressions.parameter(0, info.returnType(),
-              result.currentBlock().newName("nth"));
-
-      RexToLixTranslator currentRowTranslator =
-              winResult.rowTranslator(
-                      winResult.computeIndex(Expressions.constant(0), SeekType.START));
-
-
-      Expression dstIndex = winResult.computeIndex(
-          Expressions.subtract(
-              currentRowTranslator.translate(rexArgs.get(1), int.class),
-              Expressions.constant(1)), SeekType.START);
-
-      Expression rowInRange = winResult.rowInPartition(dstIndex);
-
-      BlockBuilder thenBlock = result.nestBlock();
-      Expression nthValue = winResult.rowTranslator(dstIndex).translate(
-              rexArgs.get(0), res.type);
-      thenBlock.add(Expressions.statement(Expressions.assign(res, nthValue)));
-      result.exitBlock();
-      BlockStatement thenBranch = thenBlock.toBlock();
-
-      Expression defaultValue = getDefaultValue(res.type);
-
-      result.currentBlock().add(Expressions.declare(0, res, null));
-      result.currentBlock().add(
-              Expressions.ifThenElse(rowInRange, thenBranch,
-                      Expressions.statement(Expressions.assign(res, defaultValue))));
-      return res;
-    }
-  }
-
   /** Implementor for the {@code LEAD} and {@code LAG} windowed
    * aggregate functions. */
   static class LeadLagImplementor implements WinAggImplementor {
@@ -1770,6 +1714,28 @@ public class RexImpTable {
           translatedOperands.get(2));
     }
   }
+
+  /** Implementor for the {@code TO_CHAR} function. */
+ /* private static class ToCharImplementor implements NotNullImplementor {
+    public Expression implement(RexToLixTranslator translator, RexCall call,
+                                List<Expression> translatedOperands) {
+      return Expressions.call(
+          BuiltInMethod.UNIX_DATE_TO_FORMATTED_STRING.method,
+          call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.DATE
+              ? Expressions.multiply(
+                  Expressions.constant(DateTimeUtils.MILLIS_PER_DAY), translatedOperands.get(0))
+              : call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.TIME
+                 ? Expressions.add(
+                      Expressions.multiply(
+                          Expressions.constant(
+                              DateTimeUtils.MILLIS_PER_DAY),
+                              Expressions.call(BuiltInMethod.CURRENT_DATE.method,
+                                  translator.getRoot())),
+                      translatedOperands.get(0))
+                 : translatedOperands.get(0),
+          translatedOperands.get(1));
+    }
+  }*/
 
   /** Implementor for the {@code FLOOR} and {@code CEIL} functions. */
   private static class FloorImplementor extends MethodNameImplementor {
