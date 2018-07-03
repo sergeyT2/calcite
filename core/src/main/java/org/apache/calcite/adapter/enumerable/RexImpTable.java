@@ -206,7 +206,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM0;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SYSTEM_USER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TAN;
-//import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TO_CHAR;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TO_CHAR;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRIM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRUNCATE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_MINUS;
@@ -255,8 +255,8 @@ public class RexImpTable {
     final TrimImplementor trimImplementor = new TrimImplementor();
     defineImplementor(TRIM, NullPolicy.STRICT, trimImplementor, false);
 
-  //  final ToCharImplementor toCharImplementor = new ToCharImplementor();
-   // defineImplementor(TO_CHAR, NullPolicy.STRICT, toCharImplementor, false);
+    final ToCharImplementor toCharImplementor = new ToCharImplementor();
+    defineImplementor(TO_CHAR, NullPolicy.STRICT, toCharImplementor, false);
 
     // logical
     defineBinary(AND, AndAlso, NullPolicy.AND, null);
@@ -1745,26 +1745,47 @@ public class RexImpTable {
   }
 
   /** Implementor for the {@code TO_CHAR} function. */
- /* private static class ToCharImplementor implements NotNullImplementor {
+  private static class ToCharImplementor implements NotNullImplementor {
     public Expression implement(RexToLixTranslator translator, RexCall call,
                                 List<Expression> translatedOperands) {
-      return Expressions.call(
-          BuiltInMethod.UNIX_DATE_TO_FORMATTED_STRING.method,
-          call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.DATE
-              ? Expressions.multiply(
-                  Expressions.constant(DateTimeUtils.MILLIS_PER_DAY), translatedOperands.get(0))
-              : call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.TIME
-                 ? Expressions.add(
-                      Expressions.multiply(
-                          Expressions.constant(
-                              DateTimeUtils.MILLIS_PER_DAY),
-                              Expressions.call(BuiltInMethod.CURRENT_DATE.method,
-                                  translator.getRoot())),
-                      translatedOperands.get(0))
-                 : translatedOperands.get(0),
-          translatedOperands.get(1));
+
+      SqlTypeName sqlTypeName = call.operands.get(0).getType().getSqlTypeName();
+
+      System.out.println("sqlTypeName " + sqlTypeName);
+      System.out.println("translatedOperands.get(0) " + translatedOperands.get(0));
+      switch (sqlTypeName) {
+      case DATE:
+      case TIME:
+      case TIMESTAMP:
+        return Expressions.call(
+            BuiltInMethod.UNIX_DATE_TO_FORMATTED_STRING.method,
+            call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.DATE
+                ? Expressions.multiply(
+                    Expressions.constant(DateTimeUtils.MILLIS_PER_DAY), translatedOperands.get(0))
+                : call.operands.get(0).getType().getSqlTypeName() == SqlTypeName.TIME
+                    ? Expressions.add(
+                        Expressions.multiply(
+                            Expressions.constant(DateTimeUtils.MILLIS_PER_DAY),
+                                Expressions.call(BuiltInMethod.CURRENT_DATE.method,
+                                    translator.getRoot())),
+                        translatedOperands.get(0))
+                    : translatedOperands.get(0),
+            translatedOperands.get(1));
+      case TINYINT:
+      case SMALLINT:
+      case INTEGER:
+      case BIGINT:
+      case DECIMAL:
+      case FLOAT:
+      case REAL:
+      case DOUBLE:
+        return Expressions.call(BuiltInMethod.INT_TO_STRING.method,
+            translatedOperands.get(0), translatedOperands.get(1));
+      }
+      System.out.println("out switch");
+      return Expressions.call(translatedOperands.get(0), BuiltInMethod.OBJECT_TO_STRING.method);
     }
-  }*/
+  }
 
   /** Implementor for the {@code FLOOR} and {@code CEIL} functions. */
   private static class FloorImplementor extends MethodNameImplementor {

@@ -1329,7 +1329,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           SqlKind.OTHER_FUNCTION,
           ReturnTypes.ARG1_NULLABLE,
           null,
-          OperandTypes.family(SqlTypeFamily.DATETIME, SqlTypeFamily.STRING),
+          OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.STRING),
           SqlFunctionCategory.STRING);
 
   public static final SqlFunction LOWER =
