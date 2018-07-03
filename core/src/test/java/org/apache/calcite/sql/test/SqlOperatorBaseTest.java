@@ -17,6 +17,7 @@
 package org.apache.calcite.sql.test;
 
 import org.apache.calcite.avatica.util.DateTimeUtils;
+import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.linq4j.Linq4j;
 import org.apache.calcite.plan.Strong;
 import org.apache.calcite.rel.type.RelDataType;
@@ -84,6 +85,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Contains unit tests for all operators. Each of the methods is named after an
@@ -311,7 +313,7 @@ public abstract class SqlOperatorBaseTest {
             CalciteAssert.EMPTY_CONNECTION_FACTORY
                 .with(new CalciteAssert
                     .AddSchemaSpecPostProcessor(CalciteAssert.SchemaSpec.HR))
-                .with("fun", "oracle"));
+                .with(CalciteConnectionProperty.FUN, "oracle"));
   }
 
   protected SqlTester oracleTester(SqlConformance conformance) {
@@ -861,6 +863,55 @@ public abstract class SqlOperatorBaseTest {
         "cast(INTERVAL '5' day as integer)",
         "INTEGER NOT NULL",
         "5");
+
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' year as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' year - INTERVAL '2' year) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' month as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' month - INTERVAL '2' month) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' day as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' day - INTERVAL '2' day) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' hour as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' hour - INTERVAL '2' hour) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' hour as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' minute - INTERVAL '2' minute) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
+    tester.checkScalarExact(
+        "cast(INTERVAL '1' minute as integer)",
+        "INTEGER NOT NULL",
+        "1");
+    tester.checkScalarExact(
+        "cast((INTERVAL '1' second - INTERVAL '2' second) as integer)",
+        "INTEGER NOT NULL",
+        "-1");
   }
 
   @Test public void testCastToInterval() {
@@ -5700,6 +5751,16 @@ public abstract class SqlOperatorBaseTest {
           "BIGINT NOT NULL");
 
       tester.checkScalar(
+          "extract(millisecond from interval '4-2' year to month)",
+          "0",
+          "BIGINT NOT NULL");
+
+      tester.checkScalar(
+          "extract(microsecond from interval '4-2' year to month)",
+          "0",
+          "BIGINT NOT NULL");
+
+      tester.checkScalar(
           "extract(minute from interval '4-2' year to month)",
           "0",
           "BIGINT NOT NULL");
@@ -5715,13 +5776,15 @@ public abstract class SqlOperatorBaseTest {
           "BIGINT NOT NULL");
     }
 
-    // Postgres doesn't support DOW, DOY and WEEK on INTERVAL YEAR MONTH type.
-    // SQL standard doesn't have extract units for DOW, DOY and WEEK.
+    // Postgres doesn't support DOW, ISODOW, DOY and WEEK on INTERVAL YEAR MONTH type.
+    // SQL standard doesn't have extract units for DOW, ISODOW, DOY and WEEK.
     tester.checkFails("^extract(doy from interval '4-2' year to month)^",
         INVALID_EXTRACT_UNIT_VALIDATION_ERROR, false);
     tester.checkFails("^extract(dow from interval '4-2' year to month)^",
         INVALID_EXTRACT_UNIT_VALIDATION_ERROR, false);
     tester.checkFails("^extract(week from interval '4-2' year to month)^",
+        INVALID_EXTRACT_UNIT_VALIDATION_ERROR, false);
+    tester.checkFails("^extract(isodow from interval '4-2' year to month)^",
         INVALID_EXTRACT_UNIT_VALIDATION_ERROR, false);
 
     tester.checkScalar(
@@ -5772,6 +5835,16 @@ public abstract class SqlOperatorBaseTest {
     }
 
     tester.checkScalar(
+        "extract(millisecond from interval '2 3:4:5.678' day to second)",
+        "5678",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(microsecond from interval '2 3:4:5.678' day to second)",
+        "5678000",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
         "extract(second from interval '2 3:4:5.678' day to second)",
         "5",
         "BIGINT NOT NULL");
@@ -5791,13 +5864,15 @@ public abstract class SqlOperatorBaseTest {
         "2",
         "BIGINT NOT NULL");
 
-    // Postgres doesn't support DOW, DOY and WEEK on INTERVAL DAY TIME type.
-    // SQL standard doesn't have extract units for DOW, DOY and WEEK.
+    // Postgres doesn't support DOW, ISODOW, DOY and WEEK on INTERVAL DAY TIME type.
+    // SQL standard doesn't have extract units for DOW, ISODOW, DOY and WEEK.
     tester.checkFails("extract(doy from interval '2 3:4:5.678' day to second)",
         INVALID_EXTRACT_UNIT_CONVERTLET_ERROR, true);
     tester.checkFails("extract(dow from interval '2 3:4:5.678' day to second)",
         INVALID_EXTRACT_UNIT_CONVERTLET_ERROR, true);
     tester.checkFails("extract(week from interval '2 3:4:5.678' day to second)",
+        INVALID_EXTRACT_UNIT_CONVERTLET_ERROR, true);
+    tester.checkFails("extract(isodow from interval '2 3:4:5.678' day to second)",
         INVALID_EXTRACT_UNIT_CONVERTLET_ERROR, true);
 
     tester.checkFails(
@@ -5818,6 +5893,13 @@ public abstract class SqlOperatorBaseTest {
         "^extract(year from interval '2 3:4:5.678' day to second)^",
         "(?s)Cannot apply 'EXTRACT' to arguments of type 'EXTRACT\\(<INTERVAL "
             + "YEAR> FROM <INTERVAL DAY TO SECOND>\\)'\\. Supported "
+            + "form\\(s\\):.*",
+        false);
+
+    tester.checkFails(
+        "^extract(isoyear from interval '2 3:4:5.678' day to second)^",
+        "(?s)Cannot apply 'EXTRACT' to arguments of type 'EXTRACT\\(<INTERVAL "
+            + "ISOYEAR> FROM <INTERVAL DAY TO SECOND>\\)'\\. Supported "
             + "form\\(s\\):.*",
         false);
 
@@ -5887,6 +5969,11 @@ public abstract class SqlOperatorBaseTest {
         "BIGINT NOT NULL");
 
     tester.checkScalar(
+        "extract(isoyear from date '2008-2-23')",
+        "2008",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
         "extract(doy from date '2008-2-23')",
         "54",
         "BIGINT NOT NULL");
@@ -5899,6 +5986,16 @@ public abstract class SqlOperatorBaseTest {
     tester.checkScalar(
         "extract(dow from date '2008-2-24')",
         "1",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(isodow from date '2008-2-23')",
+        "6",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(isodow from date '2008-2-24')",
+        "7",
         "BIGINT NOT NULL");
 
     tester.checkScalar(
@@ -5960,6 +6057,16 @@ public abstract class SqlOperatorBaseTest {
         "BIGINT NOT NULL");
 
     tester.checkScalar(
+        "extract(millisecond from timestamp '2008-2-23 12:34:56')",
+        "56000",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(microsecond from timestamp '2008-2-23 12:34:56')",
+        "56000000",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
         "extract(minute from timestamp '2008-2-23 12:34:56')",
         "34",
         "BIGINT NOT NULL");
@@ -5986,6 +6093,11 @@ public abstract class SqlOperatorBaseTest {
 
     tester.checkScalar(
         "extract(year from timestamp '2008-2-23 12:34:56')",
+        "2008",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(isoyear from timestamp '2008-2-23 12:34:56')",
         "2008",
         "BIGINT NOT NULL");
 
@@ -6066,6 +6178,17 @@ public abstract class SqlOperatorBaseTest {
         "extract(second from interval '2 3:4:5.678' day to second)",
         "5",
         "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(millisecond from interval '2 3:4:5.678' day to second)",
+        "5678",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(microsecond from interval '2 3:4:5.678' day to second)",
+        "5678000",
+        "BIGINT NOT NULL");
+
     tester.checkNull(
         "extract(month from cast(null as interval year))");
   }
@@ -6078,6 +6201,11 @@ public abstract class SqlOperatorBaseTest {
 
     tester.checkScalar(
         "extract(year from date '2008-2-23')",
+        "2008",
+        "BIGINT NOT NULL");
+
+    tester.checkScalar(
+        "extract(isoyear from date '2008-2-23')",
         "2008",
         "BIGINT NOT NULL");
 
@@ -6109,6 +6237,12 @@ public abstract class SqlOperatorBaseTest {
 
     tester.checkNull(
         "extract(second from cast(null as time))");
+
+    tester.checkNull(
+        "extract(millisecond from cast(null as time))");
+
+    tester.checkNull(
+        "extract(microsecond from cast(null as time))");
   }
 
   @Test public void testArrayValueConstructor() {
@@ -6406,6 +6540,23 @@ public abstract class SqlOperatorBaseTest {
         "2016-06-30", "DATE NOT NULL");
     tester.checkScalar("timestampadd(MONTH, -1, date '2016-03-31')",
         "2016-02-29", "DATE NOT NULL");
+  }
+
+  @Test public void testTimestampAddFractionalSeconds() {
+    tester.setFor(SqlStdOperatorTable.TIMESTAMP_ADD);
+    tester.checkType(
+        "timestampadd(SQL_TSI_FRAC_SECOND, 2, timestamp '2016-02-24 12:42:25.000000')",
+        // "2016-02-24 12:42:25.000002",
+        "TIMESTAMP(3) NOT NULL");
+
+    // The following test would correctly return "TIMESTAMP(6) NOT NULL" if max
+    // precision were 6 or higher
+    assumeTrue(tester.getValidator().getTypeFactory().getTypeSystem()
+        .getMaxPrecision(SqlTypeName.TIMESTAMP) == 3);
+    tester.checkType(
+        "timestampadd(MICROSECOND, 2, timestamp '2016-02-24 12:42:25.000000')",
+        // "2016-02-24 12:42:25.000002",
+        "TIMESTAMP(3) NOT NULL");
   }
 
   @Test public void testTimestampDiff() {
