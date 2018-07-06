@@ -190,6 +190,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.RADIANS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.RAND;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.RAND_INTEGER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.RANK;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.REGR_COUNT;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.REINTERPRET;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.REPLACE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.ROUND;
@@ -452,6 +453,7 @@ public class RexImpTable {
     map.put(LOCALTIMESTAMP, systemFunctionImplementor);
 
     aggMap.put(COUNT, constructorSupplier(CountImplementor.class));
+    aggMap.put(REGR_COUNT, constructorSupplier(CountImplementor.class));
     aggMap.put(SUM0, constructorSupplier(SumImplementor.class));
     aggMap.put(SUM, constructorSupplier(SumImplementor.class));
     Supplier<MinMaxImplementor> minMax =
@@ -476,6 +478,7 @@ public class RexImpTable {
     winAggMap.put(LAG, constructorSupplier(LagImplementor.class));
     winAggMap.put(NTILE, constructorSupplier(NtileImplementor.class));
     winAggMap.put(COUNT, constructorSupplier(CountWinImplementor.class));
+    winAggMap.put(REGR_COUNT, constructorSupplier(CountWinImplementor.class));
   }
 
   private <T> Supplier<T> constructorSupplier(Class<T> klass) {
