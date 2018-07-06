@@ -237,6 +237,36 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
         new AvgVarianceConvertlet(SqlKind.VAR_SAMP));
     registerOp(SqlStdOperatorTable.VARIANCE,
         new AvgVarianceConvertlet(SqlKind.VAR_SAMP));
+    registerOp(
+        SqlStdOperatorTable.COVAR_POP,
+        new AvgVarianceConvertlet(SqlKind.COVAR_POP));
+    registerOp(
+        SqlStdOperatorTable.COVAR_SAMP,
+        new AvgVarianceConvertlet(SqlKind.COVAR_SAMP));
+    registerOp(
+        SqlStdOperatorTable.REGR_AVGX,
+        new AvgVarianceConvertlet(SqlKind.REGR_AVGX));
+    registerOp(
+        SqlStdOperatorTable.REGR_AVGY,
+        new AvgVarianceConvertlet(SqlKind.REGR_AVGY));
+    registerOp(
+        SqlStdOperatorTable.REGR_INTERCEPT,
+        new AvgVarianceConvertlet(SqlKind.REGR_INTERCEPT));
+    registerOp(
+        SqlStdOperatorTable.REGR_R2,
+        new AvgVarianceConvertlet(SqlKind.REGR_R2));
+    registerOp(
+        SqlStdOperatorTable.REGR_SLOPE,
+         new AvgVarianceConvertlet(SqlKind.REGR_SLOPE));
+    registerOp(
+        SqlStdOperatorTable.REGR_SXX,
+        new AvgVarianceConvertlet(SqlKind.REGR_SXX));
+    registerOp(
+        SqlStdOperatorTable.REGR_SXY,
+        new AvgVarianceConvertlet(SqlKind.REGR_SXY));
+    registerOp(
+        SqlStdOperatorTable.REGR_SYY,
+        new AvgVarianceConvertlet(SqlKind.REGR_SYY));
 
     final SqlRexConvertlet floorCeilConvertlet = new FloorCeilConvertlet();
     registerOp(SqlStdOperatorTable.FLOOR, floorCeilConvertlet);
@@ -1092,6 +1122,12 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       case VAR_SAMP:
         expr = expandVariance(arg, type, cx, false, false);
         break;
+      case COVAR_POP:
+        expr = expandCovariance(arg, call.operand(1), type, cx, true, false);
+        break;
+      case COVAR_SAMP:
+        expr = expandCovariance(arg, call.operand(1), type, cx, false, false);
+        break;
       default:
         throw Util.unexpected(kind);
       }
@@ -1192,6 +1228,65 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
             SqlLiteral.createExactNumeric("0.5", pos);
         result =
             SqlStdOperatorTable.POWER.createCall(pos, div, half);
+      }
+      return result;
+    }
+
+    private SqlNode expandCovariance(
+        final SqlNode arg0Input,
+        final SqlNode arg1Input,
+        final RelDataType varType,
+        final SqlRexContext cx,
+        boolean biased,
+        boolean sqrt) {
+      // covar_pop(x1, x2) ==>
+      //     (sum(x1 * x2) - sum(x2) * sum(x1) / count(x1, x2))
+      //     / count(x1, x2)
+      //
+      // covar_samp(x1, x2) ==>
+      //     (sum(x1 * x2) - sum(x1) * sum(x2) / count(x1, x2))
+      //     / (count(x1, x2) - 1)
+      final SqlParserPos pos = SqlParserPos.ZERO;
+
+      final RexNode arg0Rex = cx.convertExpression(arg0Input);
+      final RexNode arg1Rex = cx.convertExpression(arg1Input);
+      final SqlNode arg0;
+      if (!arg0Rex.getType().equals(varType)) {
+        arg0 = SqlStdOperatorTable.CAST.createCall(pos,
+            new SqlDataTypeSpec(new SqlIdentifier(varType.getSqlTypeName().getName(), pos),
+                varType.getPrecision(), varType.getScale(), null, null, pos));
+      } else {
+        arg0 = arg0Input;
+      }
+      final SqlNode arg1;
+      if (!arg1Rex.getType().equals(varType)) {
+        arg1 = SqlStdOperatorTable.CAST.createCall(pos,
+                new SqlDataTypeSpec(new SqlIdentifier(varType.getSqlTypeName().getName(), pos),
+                        varType.getPrecision(), varType.getScale(), null, null, pos));
+      } else {
+        arg1 = arg1Input;
+      }
+      final SqlNode argSquared = SqlStdOperatorTable.MULTIPLY.createCall(pos, arg0, arg1);
+      final SqlNode sumArgSquared = SqlStdOperatorTable.SUM.createCall(pos, argSquared);
+      final SqlNode sum0 = SqlStdOperatorTable.SUM.createCall(pos, arg0);
+      final SqlNode sum1 = SqlStdOperatorTable.SUM.createCall(pos, arg1);
+      final SqlNode sumSquared = SqlStdOperatorTable.MULTIPLY.createCall(pos, sum0, sum1);
+      final SqlNode count = SqlStdOperatorTable.REGR_COUNT.createCall(pos, arg0, arg1);
+      
+      final SqlNode avgSumSquared = SqlStdOperatorTable.DIVIDE.createCall(pos, sumSquared, count);
+      final SqlNode diff = SqlStdOperatorTable.MINUS.createCall(pos, sumArgSquared, avgSumSquared);
+      final SqlNode denominator;
+      if (biased) {
+        denominator = count;
+      } else {
+        final SqlNumericLiteral one = SqlLiteral.createExactNumeric("1", pos);
+        denominator = SqlStdOperatorTable.MINUS.createCall(pos, count, one);
+      }
+      final SqlNode div = SqlStdOperatorTable.DIVIDE.createCall(pos, diff, denominator);
+      SqlNode result = div;
+      if (sqrt) {
+        final SqlNumericLiteral half = SqlLiteral.createExactNumeric("0.5", pos);
+        result = SqlStdOperatorTable.POWER.createCall(pos, div, half);
       }
       return result;
     }

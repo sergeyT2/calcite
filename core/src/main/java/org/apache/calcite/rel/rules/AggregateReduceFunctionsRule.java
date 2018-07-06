@@ -127,7 +127,8 @@ public class AggregateReduceFunctionsRule extends RelOptRule {
    * Returns whether the aggregate call is a reducible function
    */
   private boolean isReducible(final SqlKind kind) {
-    if (SqlKind.AVG_AGG_FUNCTIONS.contains(kind)) {
+    if (SqlKind.AVG_AGG_FUNCTIONS.contains(kind)
+        || SqlKind.COVAR_AVG_AGG_FUNCTIONS.contains(kind)) {
       return true;
     }
     switch (kind) {
@@ -229,6 +230,14 @@ public class AggregateReduceFunctionsRule extends RelOptRule {
         //     / COUNT(x)
         return reduceStddev(oldAggRel, oldCall, true, false, newCalls,
             aggCallMapping, inputExprs);
+      case REGR_AVGX:
+      case REGR_AVGY:
+      case REGR_INTERCEPT:
+      case REGR_R2:
+      case REGR_SLOPE:
+      case REGR_SXX:
+      case REGR_SXY:
+      case REGR_SYY:
       case VAR_SAMP:
         // replace original VAR_POP(x) with
         //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
