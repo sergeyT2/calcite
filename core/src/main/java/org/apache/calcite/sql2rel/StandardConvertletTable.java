@@ -1220,6 +1220,10 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       case COVAR_SAMP:
         expr = expandCovariance(arg, call.operand(1), type, cx, false, false);
         break;
+      case REGR_AVGY:
+      case REGR_AVGX:
+        expr = expandRegrAvg(arg, call.operand(1), kind, type, cx);
+        break;
       default:
         throw Util.unexpected(kind);
       }
@@ -1246,6 +1250,28 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           SqlStdOperatorTable.COUNT.createCall(pos, arg);
       return SqlStdOperatorTable.DIVIDE.createCall(
           pos, sumCast, count);
+    }
+
+    private SqlNode expandRegrAvg(
+            final SqlNode arg1, final SqlNode arg2,
+            final SqlKind avgKind, final RelDataType avgType, final SqlRexContext cx) {
+      final SqlParserPos pos = SqlParserPos.ZERO;
+      final SqlNode sum =
+          SqlStdOperatorTable.SUM.createCall(pos, avgKind == SqlKind.REGR_AVGX ? arg1 : arg2);
+      final RexNode sumRex = cx.convertExpression(sum);
+      final SqlNode sumCast;
+      if (!sumRex.getType().equals(avgType)) {
+        sumCast = SqlStdOperatorTable.CAST.createCall(pos,
+            new SqlDataTypeSpec(
+                new SqlIdentifier(avgType.getSqlTypeName().getName(), pos),
+                avgType.getPrecision(), avgType.getScale(), null, null, pos));
+      } else {
+        sumCast = sum;
+      }
+      final SqlNode count =
+              SqlStdOperatorTable.REGR_COUNT.createCall(pos, arg1, arg2);
+      return SqlStdOperatorTable.DIVIDE.createCall(
+              pos, sumCast, count);
     }
 
     private SqlNode expandVariance(
@@ -1364,7 +1390,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       final SqlNode sum1 = SqlStdOperatorTable.SUM.createCall(pos, arg1);
       final SqlNode sumSquared = SqlStdOperatorTable.MULTIPLY.createCall(pos, sum0, sum1);
       final SqlNode count = SqlStdOperatorTable.REGR_COUNT.createCall(pos, arg0, arg1);
-      
+
       final SqlNode avgSumSquared = SqlStdOperatorTable.DIVIDE.createCall(pos, sumSquared, count);
       final SqlNode diff = SqlStdOperatorTable.MINUS.createCall(pos, sumArgSquared, avgSumSquared);
       final SqlNode denominator;
