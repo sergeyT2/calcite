@@ -207,7 +207,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SUM0;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SYSTEM_USER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TAN;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TO_CHAR;
+//import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TO_CHAR;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRIM;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.TRUNCATE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_MINUS;
@@ -256,8 +256,8 @@ public class RexImpTable {
     final TrimImplementor trimImplementor = new TrimImplementor();
     defineImplementor(TRIM, NullPolicy.STRICT, trimImplementor, false);
 
-    final ToCharImplementor toCharImplementor = new ToCharImplementor();
-    defineImplementor(TO_CHAR, NullPolicy.STRICT, toCharImplementor, false);
+  //  final ToCharImplementor toCharImplementor = new ToCharImplementor();
+    //defineImplementor(TO_CHAR, NullPolicy.STRICT, toCharImplementor, false);
 
     // logical
     defineBinary(AND, AndAlso, NullPolicy.AND, null);
@@ -1524,7 +1524,6 @@ public class RexImpTable {
     }
   }
 
-<<<<<<< HEAD
   /** Implementor for the {@code NTH_VALUE}
    * windowed aggregate function. */
   static class NthValueImplementor implements WinAggImplementor {
@@ -1748,7 +1747,7 @@ public class RexImpTable {
   }
 
   /** Implementor for the {@code TO_CHAR} function. */
-  private static class ToCharImplementor implements NotNullImplementor {
+  /*private static class ToCharImplementor implements NotNullImplementor {
     public Expression implement(RexToLixTranslator translator, RexCall call,
                                 List<Expression> translatedOperands) {
 
@@ -1788,7 +1787,7 @@ public class RexImpTable {
       System.out.println("out switch");
       return Expressions.call(translatedOperands.get(0), BuiltInMethod.OBJECT_TO_STRING.method);
     }
-  }
+  }*/
 
   /** Implementor for the {@code FLOOR} and {@code CEIL} functions. */
   private static class FloorImplementor extends MethodNameImplementor {
