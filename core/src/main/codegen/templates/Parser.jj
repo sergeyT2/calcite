@@ -5171,7 +5171,14 @@ SqlIdentifier ReservedFunctionName() :
     |   <PERCENT_RANK>
     |   <POWER>
     |   <RANK>
+    |   <REGR_AVGX>
+    |   <REGR_AVGY>
+    |   <REGR_COUNT>
+    |   <REGR_INTERCEPT>
+    |   <REGR_R2>
+    |   <REGR_SLOPE>
     |   <REGR_SXX>
+    |   <REGR_SXY>
     |   <REGR_SYY>
     |   <ROW_NUMBER>
     |   <SECOND>
@@ -5180,6 +5187,7 @@ SqlIdentifier ReservedFunctionName() :
     |   <STDDEV_SAMP>
     |   <SUM>
     |   <UPPER>
+    |   <TO_CHAR>
     |   <TRUNCATE>
     |   <USER>
     |   <VAR_POP>
@@ -6036,6 +6044,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < TIMEZONE_MINUTE: "TIMEZONE_MINUTE" >
 |   < TINYINT: "TINYINT" >
 |   < TO: "TO" >
+|   < TO_CHAR: "TO_CHAR" >
 |   < TOP_LEVEL_COUNT: "TOP_LEVEL_COUNT" >
 |   < TRAILING: "TRAILING" >
 |   < TRANSACTION: "TRANSACTION" >

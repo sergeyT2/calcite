@@ -78,6 +78,7 @@ import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.SqlWindow;
 import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
+import org.apache.calcite.sql.dialect.CalciteSqlDialect;
 import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -1545,6 +1546,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
 
   public RelDataType getValidatedNodeType(SqlNode node) {
     RelDataType type = getValidatedNodeTypeIfKnown(node);
+    System.out.println("node " + node.toSqlString(CalciteSqlDialect.DEFAULT));
     if (type == null) {
       throw Util.needToImplement(node);
     } else {

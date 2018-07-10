@@ -173,10 +173,12 @@ public class SqlCastFunction extends SqlFunction {
     final SqlWriter.Frame frame = writer.startFunCall(getName());
     call.operand(0).unparse(writer, 0, 0);
     writer.sep("AS");
-    if (call.operand(1) instanceof SqlIntervalQualifier) {
-      writer.sep("INTERVAL");
+    if (call.operandCount() == 2) {
+      if (call.operand(1) instanceof SqlIntervalQualifier) {
+        writer.sep("INTERVAL");
+      }
+      call.operand(1).unparse(writer, 0, 0);
     }
-    call.operand(1).unparse(writer, 0, 0);
     writer.endFunCall(frame);
   }
 

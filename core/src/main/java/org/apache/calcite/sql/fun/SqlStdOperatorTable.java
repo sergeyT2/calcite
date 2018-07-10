@@ -51,6 +51,7 @@ import org.apache.calcite.sql.type.InferTypes;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlOperandCountRanges;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.ReflectiveSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
@@ -909,10 +910,52 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
       new SqlAvgAggFunction(SqlKind.STDDEV_POP);
 
   /**
+   * <code>REGR_AVGX</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_AVGX =
+      new SqlCovarAggFunction(SqlKind.REGR_AVGX);
+
+  /**
+   * <code>REGR_AVGY</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_AVGY =
+      new SqlCovarAggFunction(SqlKind.REGR_AVGY);
+
+  /**
+   * <code>REGR_COUNT</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_COUNT =
+      new SqlCountAggFunction("REGR_COUNT");
+
+  /**
+   * <code>REGR_INTERCEPT</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_INTERCEPT =
+      new SqlCovarAggFunction(SqlKind.REGR_INTERCEPT);
+
+  /**
+   * <code>REGR_R2</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_R2 =
+      new SqlCovarAggFunction(SqlKind.REGR_R2);
+
+  /**
+   * <code>REGR_SLOPE</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_SLOPE =
+      new SqlCovarAggFunction(SqlKind.REGR_SLOPE);
+
+  /**
    * <code>REGR_SXX</code> aggregate function.
    */
   public static final SqlAggFunction REGR_SXX =
       new SqlCovarAggFunction(SqlKind.REGR_SXX);
+
+  /**
+   * <code>REGR_SXY</code> aggregate function.
+   */
+  public static final SqlAggFunction REGR_SXY =
+      new SqlCovarAggFunction(SqlKind.REGR_SXY);
 
   /**
    * <code>REGR_SYY</code> aggregate function.
@@ -1320,6 +1363,15 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           ReturnTypes.ARG0_NULLABLE,
           null,
           OperandTypes.CHARACTER,
+          SqlFunctionCategory.STRING);
+
+  public static final SqlFunction TO_CHAR =
+      new SqlFunction(
+          "TO_CHAR",
+          SqlKind.OTHER_FUNCTION,
+          ReturnTypes.ARG1_NULLABLE,
+          null,
+          OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.STRING),
           SqlFunctionCategory.STRING);
 
   public static final SqlFunction LOWER =
