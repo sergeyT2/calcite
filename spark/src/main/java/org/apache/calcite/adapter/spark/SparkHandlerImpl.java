@@ -31,6 +31,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -49,7 +50,7 @@ public class SparkHandlerImpl implements CalcitePrepare.SparkHandler {
       new JavaSparkContext("local[1]", "calcite");
 
   private static SparkHandlerImpl instance;
-  private static final File SRC_DIR = new File("/tmp");
+  private static final File SRC_DIR = new File(System.getProperty("java.io.tmpdir"));
   private static final File CLASS_DIR = new File("target/classes");
 
   /** Creates a SparkHandlerImpl. */
@@ -107,7 +108,7 @@ public class SparkHandlerImpl implements CalcitePrepare.SparkHandler {
   public ArrayBindable compile(ClassDeclaration expr, String s) {
     final String className = "CalciteProgram" + classId.getAndIncrement();
     final File file = new File(SRC_DIR, className + ".java");
-    try (Writer w = Util.printWriter(file)) {
+    try (Writer w = new StringWriter()) {
       String source = "public class " + className + "\n"
           + "    implements " + ArrayBindable.class.getName()
           + ", " + Serializable.class.getName()
@@ -123,7 +124,7 @@ public class SparkHandlerImpl implements CalcitePrepare.SparkHandler {
       w.close();
       JaninoCompiler compiler = new JaninoCompiler();
       compiler.getArgs().setDestdir(CLASS_DIR.getAbsolutePath());
-      compiler.getArgs().setSource(source, file.getAbsolutePath());
+      compiler.getArgs().setSource(w.toString(), file.getAbsolutePath());
       compiler.getArgs().setFullClassName(className);
       compiler.compile();
       @SuppressWarnings("unchecked")
