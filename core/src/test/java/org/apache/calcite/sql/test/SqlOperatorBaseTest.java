@@ -5542,17 +5542,17 @@ public abstract class SqlOperatorBaseTest {
     tester.setFor(SqlStdOperatorTable.FUSION, VM_FENNEL, VM_JAVA);
   }
   @Test public void testCentury() {
-        tester.setFor(
+    tester.setFor(
                         SqlStdOperatorTable.CENTURY,
                         VM_FENNEL,
                         VM_JAVA);
 
-                tester.checkScalar(
+    tester.checkScalar(
                                 "CENTURY(date '2008-1-23')",
                                 "21",
                                 "BIGINT NOT NULL");
-        tester.checkNull("century(cast(null as date))");
-      }
+    tester.checkNull("century(cast(null as date))");
+  }
   @Test public void testYear() {
     tester.setFor(
         SqlStdOperatorTable.YEAR,
