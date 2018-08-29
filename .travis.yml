@@ -28,6 +28,7 @@ branches:
   only:
     - master
     - new-master
+    - master_clean
     - javadoc
     - /^branch-.*$/
     - /^[0-9]+-.*$/
