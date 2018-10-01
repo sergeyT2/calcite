@@ -1171,6 +1171,7 @@ comp:
 | SUBSTRING(string FROM integer)  | Returns a substring of a character string starting at a given point
 | SUBSTRING(string FROM integer FOR integer) | Returns a substring of a character string starting at a given point with a given length
 | INITCAP(string)            | Returns *string* with the first letter of each word converter to upper case and the rest to lower case. Words are sequences of alphanumeric characters separated by non-alphanumeric characters.
+| CHR(numeric)               | CHR returns the character having the binary equivalent to n as a CHAR value in the database character set. This function has Oracle semantics.
 
 Not implemented:
 
